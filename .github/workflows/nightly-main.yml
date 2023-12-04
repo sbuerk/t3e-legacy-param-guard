@@ -1,0 +1,33 @@
+name: nightly-main
+on:
+  schedule:
+    - cron:  '42 5 * * *'
+
+jobs:
+  main:
+    name: nightly-main
+    runs-on: ubuntu-22.04
+    permissions: write-all
+    strategy:
+      # This prevents cancellation of matrix job runs, if one or more already failed
+      # and let the remaining matrix jobs be executed anyway.
+      fail-fast: false
+      matrix:
+        include:
+          - workflowName: tests11i3.yml
+            branch: main
+          - workflowName: tests11i4.yml
+            branch: main
+          - workflowName: tests12.yml
+            branch: main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: '${{ matrix.branch }}'
+
+      - name: Execute ${{ matrix.workflowName }} on ${{ matrix.branch }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run ${{ matrix.workflowName }} --ref ${{ matrix.branch }}
